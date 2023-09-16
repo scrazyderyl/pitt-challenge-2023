@@ -1,6 +1,7 @@
 [
     {
         "id": "pandemic",
+        "day": 30,
         "description": "",
         "tasks": [
             {

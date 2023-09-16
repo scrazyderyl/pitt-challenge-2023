@@ -1,6 +1,6 @@
 {
-    "day_length": 600,
-    "tasks_interval": 100,
-    "world_event_interval": 300,
-    "scenario_interval": 12
+    "dayLength": 600,
+    "tasksInterval": 100,
+    "eventInterval": 300,
+    "scenarioInterval": 12
 }

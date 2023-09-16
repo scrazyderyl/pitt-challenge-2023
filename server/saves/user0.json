@@ -2,8 +2,10 @@
     "name": "",
     "level": 1,
     "xp": 0,
-    "day": 1,
-    "time": 0,
+    "currentTime": [1, 0],
+    "lastTaskCreated": [1, 0],
+    "lastEventCreated": [1, 0],
+    "lastScenarioCreated": [1, 0],
     "activeScenario": null,
     "activeTasks": []
 }
