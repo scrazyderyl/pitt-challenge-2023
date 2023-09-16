@@ -1,0 +1,14 @@
+[
+    {
+        "id": "pandemic",
+        "description": "",
+        "tasks": [
+            {
+                "building_id": "hospital",
+                "description": "",
+                "xp": 0,
+                "content": {}
+            }
+        ]
+    }
+]

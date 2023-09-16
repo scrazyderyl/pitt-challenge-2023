@@ -1,0 +1,11 @@
+[
+    {
+        "id": 0,
+        "building_id": "hospital",
+        "probability": "",
+        "description": "",
+        "xp": 0,
+        "cooldown": 0,
+        "content": {}
+    }
+]
