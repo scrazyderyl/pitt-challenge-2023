@@ -205,6 +205,8 @@ function TaskManager() {
 
     var availableTasks;
     var activeTasks;
+    var availableInteractions;
+    var activeInteractions = [];
     var activeScenario;
     var taskInProgress = false;
 
@@ -212,6 +214,7 @@ function TaskManager() {
         day = timestamp[0];
         time = timestamp[1];
         availableTasks = RANDOM_TASKS;
+        availableInteractions = INTERACTIONS;
         activeTasks = active;
     }
 
@@ -264,12 +267,24 @@ function TaskManager() {
             return;
         }
 
-        var index = Math.floor(Math.random() * RANDOM_TASKS.length);
-        var task = RANDOM_TASKS[index];
+        var index = Math.floor(Math.random() * availableTasks.length);
+        var task = availableTasks[index];
 
         if (Math.random() <= task.probability) {
             this.addTask(task);
             lastTaskCreatedTime = time;
+        }
+    }
+
+    this.tryGenerateInteraction = () => {
+        var index = Math.floor(Math.random() * INTERACTIONS.length);
+        var interaction = INTERACTIONS[index];
+
+        if (Math.random() <= interaction.probability) {
+            availableInteractions.splice(availableInteractions.indexOf(interaction), 1);
+            activeInteractions.push(interaction);
+            lastInteractionCreatedTime = time;
+            this.createInteraction(interaction);
         }
     }
 
@@ -299,6 +314,8 @@ function TaskManager() {
     this.startDay = () => {
         lastTaskCreatedTime = -CONFIG.dayLength;
         lastTaskCheckTime = -CONFIG.dayLength;
+        lastInteractionCreatedTime = -CONFIG.dayLength;
+        lastInteractionCheckTime = -CONFIG.dayLength;
         lastEventCreatedTime = -CONFIG.dayLength;
         lastEventCheckTime = -CONFIG.dayLength;
 
@@ -326,7 +343,7 @@ function TaskManager() {
             }
         }
 
-        if (scenario && day == scenario.endDay) {
+        if (scenario != undefined && day == scenario.endDay) {
             this.endScenario(activeScenario);
         }
     }
@@ -347,11 +364,68 @@ function TaskManager() {
             this.tryGenerateTask();
         }
 
+        // can generate interaction?
+        if (time - lastInteractionCreatedTime >= CONFIG.interactionGenerateCooldown && time - lastInteractionCheckTime >= CONFIG.interactionGenerateInterval) {
+            lastInteractionCheckTime = time;
+            this.tryGenerateInteraction();
+        }
+
         // can generate event?
         if (time - lastEventCreatedTime >= CONFIG.eventGenerateCooldown && time - lastEventCheckTime >= CONFIG.eventGenerateInterval) {
             lastEventCheckTime = time;
             this.tryGenerateEvent();
         }
+    }
+
+    this.createInteraction = (interaction) => {
+        var element1 = map.getLocation(interaction.location1).getElement();
+        var element2 = map.getLocation(interaction.location2).getElement();
+
+        var rect1 = element1.getBoundingClientRect();
+        var cx1 = (rect1.left + rect1.right) / 2;
+        var cy1 = (rect1.top + rect1.bottom) / 2;
+    
+        var rect2 = element2.getBoundingClientRect();
+        var cx2 = (rect2.left + rect2.right) / 2;
+        var cy2 = (rect2.top + rect2.bottom) / 2;
+    
+        var dx = cx2 - cx1;
+        var dy = cy2 - cy1;
+        var length = Math.sqrt(dx * dx + dy * dy);
+        var angle = Math.atan2(dy, dx);
+    
+        var line = document.createElement("div")
+        line.classList.add("path");
+        line.style.width = `${length}px`;
+        line.style.left = `${cx1}px`;
+        line.style.top = `${cy1}px`;
+        line.style.transform = `rotate(${angle}rad)`;
+    
+        var ccx = (cx1 + cx2) / 2;
+        var ccy = (cy1 + cy2) / 2 - 60;
+
+        var alert = document.createElement("div");
+        alert.classList.add("task-alert");
+        alert.style.left = `${ccx}px`;
+        alert.style.top = `${ccy}px`;
+        alert.style.margin = "0";
+        alert.style.zIndex = "-1";
+        alert.textContent = "!";
+
+        document.body.appendChild(line);
+        document.body.appendChild(alert);
+
+        alert.addEventListener("click", () => {
+            _overlay.classList.remove("hidden");
+            _taskWindow.textContent = interaction.content.text;
+
+            _overlay.addEventListener("click", () => {
+                document.body.removeChild(line);
+                document.body.removeChild(alert);
+                _overlay.classList.add("hidden");
+                user.increaseXP(interaction.xp);
+            });     
+        })
     }
 }
 

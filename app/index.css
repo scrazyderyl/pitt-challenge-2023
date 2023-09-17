@@ -106,6 +106,31 @@ p {
   filter: brightness(0.1) blur(0.5px) 
 }
 
+.path {
+  position: fixed;
+  height: 8px;
+  background-color: gold;
+  border-radius: 4px;
+  transform-origin: 0;
+  z-index: -1;
+
+  animation-name: pulse;
+  animation-duration: 2s;
+  animation-direction: alternate;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.6;
+  }
+}
+
 .task-alert {
   position: absolute;
   left: 0;

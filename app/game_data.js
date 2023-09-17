@@ -4,6 +4,8 @@ const CONFIG = {
     dayLength: 600,
     taskGenerateInterval: 10,
     taskGenerateCooldown: 60,
+    interactionGenerateInterval: 2,
+    interactionGenerateCooldown: 60,
     eventGenerateInterval: 30,
     eventGenerateCooldown: 300,
     scenarioInterval: 12,
@@ -154,6 +156,20 @@ const RANDOM_TASKS = [
 
 const SCHEDULED_TASKS = [
 
+]
+
+const INTERACTIONS = [
+    {
+        "location1": "hospital",
+        "location2": "pharmacy",
+        probability: 0.5,
+        duration: [0, CONFIG.dayLength],
+        xp: 30,
+        content: {
+            type: "text",
+            text: "A doctor at the hospital prescribes medication for their patient. The request is sent over electronically."
+        }
+    }
 ]
 
 const EVENTS = [
