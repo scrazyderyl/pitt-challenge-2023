@@ -1,15 +1,13 @@
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
+  width: 100vw;
+  height: 100vh;
+  user-select: none;
 }
 
 p {
   margin: 0;
-}
-
-.root {
-  width: 100vw;
-  height: 100vh;
 }
 
 .message {
@@ -24,8 +22,14 @@ p {
   min-height: 100px;
   border-radius: 20px;
   padding: 20px;
-  font-size: 22px;
+  font-size: 24px;
   box-shadow: 6px 6px 12px grey;
+  transition-duration: 0.6s;
+  transition-timing-function: cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+
+.slide-in {
+  top: -160px;
 }
 
 .hud {
@@ -49,17 +53,37 @@ p {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
+.level-up {
+  animation-duration: 1s;
+  animation-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation-name: level-up;
+}
+
+@keyframes level-up {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .status-bar {
   width: 200px;
   height: 30px;
   right: 20px;
   top: 20px;
+  background-color: white;
   border: 3px solid black;
   border-radius: 15px;
   background-size: 0%;
   background-image: linear-gradient(to right, rgb(88, 198, 23), rgb(31, 167, 24));
   background-repeat: no-repeat;
   display: flex;
+  transition-duration: 2s;
 }
 
 .status-bar-text {
@@ -68,20 +92,26 @@ p {
   margin-left: 12px;
 }
 
-.locked {
-  filter: brightness(0.1) blur(0.5px)
+.map {
+  width: 100%;
+  height: 100%;
 }
 
 .tile {
   display: inline-block;
+  position: absolute;
 }
+
+.locked {
+  filter: brightness(0.1) blur(0.5px) 
+}
+
 
 .task-alert {
   position: relative;
   margin-left: auto;
   margin-right: auto;
   margin-bottom: 12px;
-  display: block;
   border-radius: 22px;
   border: 2px solid black;
   background-color: rgb(216, 174, 95);
@@ -95,4 +125,8 @@ p {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-size: 26px;
   color: rgb(149, 0, 0);
+}
+
+.hidden {
+  display: none;
 }
