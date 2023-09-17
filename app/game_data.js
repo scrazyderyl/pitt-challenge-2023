@@ -135,7 +135,7 @@ const RANDOM_TASKS = [
         xp: 20,
         content: {
             type: "text",
-            text: "Medications prescribed by a care provider can be picked up at a pharmacy. Pharmacies are often located inside stores."
+            text: "Medications prescribed by a care provider can be picked up at a pharmacy."
         }
     },
     {
@@ -146,7 +146,7 @@ const RANDOM_TASKS = [
         xp: 20,
         content: {
             type: "text",
-            text: "Most grocery stores and general stores carry personal care items and over the counter (OTC) medication. This type of medication has been deemed safe for use by the general public and does not require a prescription."
+            text: "Most grocery stores and general stores carry over the counter (OTC) medication. This type of medication has been deemed safe for use by the general public and does not require a prescription."
         }
 
     }
@@ -168,7 +168,7 @@ const EVENTS = [
                 xp: 30,
                 content: {
                     type: "text",
-                    text: "An unconscious patient is rushed into the emergency room by paramedics. They are deemed to have suffered life-threatening injuries and have been prioritzed for treatemnt through the triage system."
+                    text: "An unconscious patient is rushed into the emergency room by paramedics. They are deemed to have suffered life-threatening injuries and have been prioritized for treatemnt through the triage system."
                 }
             }
         ]

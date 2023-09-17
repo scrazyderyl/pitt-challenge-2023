@@ -247,7 +247,7 @@ function TaskManager() {
 
         _overlay.classList.remove("hidden");
 
-        _taskWindow.addEventListener("click", () => {
+        _overlay.addEventListener("click", () => {
             this.finishTask(task);
         });
     }
