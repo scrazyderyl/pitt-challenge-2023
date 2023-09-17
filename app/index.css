@@ -98,20 +98,21 @@ p {
 }
 
 .tile {
-  display: inline-block;
   position: absolute;
+  transition: 5s;
 }
 
 .locked {
   filter: brightness(0.1) blur(0.5px) 
 }
 
-
 .task-alert {
-  position: relative;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -60px;
   margin-left: auto;
   margin-right: auto;
-  margin-bottom: 12px;
   border-radius: 22px;
   border: 2px solid black;
   background-color: rgb(216, 174, 95);
@@ -125,6 +126,77 @@ p {
   font-family: Verdana, Geneva, Tahoma, sans-serif;
   font-size: 26px;
   color: rgb(149, 0, 0);
+}
+
+.jitter {
+  animation-iteration-count: infinite;
+  animation-duration: 0.15s;
+  animation-direction: alternate;
+  animation-name: jitter;
+}
+
+@keyframes jitter {
+  0% {
+    transform: rotate(0) scale(1.1);
+  }
+  25% {
+    transform: rotate(-10deg) scale(1.1);
+  }
+  75% {
+    transform: rotate(10deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(0) scale(1.1);
+  }
+}
+
+.overlay {
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.task-window {
+  width: 1000px;
+  height: 160px;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 40px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  margin: auto;
+  border-radius: 10px;
+  font-size: 22px;
+  background-color: whitesmoke;
+  line-height: 1.6;
+}
+
+.next {
+  bottom: 11px;
+  right: 20px;
+  font-size: 40px;
+  position: absolute;
+  color: #242424;
+
+  animation-name: bob;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  animation-duration: 0.8s;
+  animation-direction: alternate;
+}
+
+@keyframes bob {
+  0% {
+    right: 20px;
+  }
+  100% {
+    right: 32px;
+  }
 }
 
 .hidden {

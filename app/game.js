@@ -1,48 +1,30 @@
-const SERVER_PATH = "http://localhost:4000";
-
-function Game() {
-    this.load = () => {
-        user.readSave("user0").then(() => {
-            setTimeout(() => {
-                hud.showMessage("A car accident has been reported! First responders have been dispatched to the scene.");
-            }, 16000)
-        });
-    }
-}
-
 function Map() {
     var _map = document.getElementById("map");
 
     var tiles = [];
     
-    this.load = (level) => {
-        var i = 1;
-
-        for (; i <= level; i++) {
-            var locations = PROGRESSION[i].locations;
-
-            for (let j = 0; j < locations.length; j++) {
-                var tile = new Tile(locations[j], false);
-                _map.appendChild(tile.getElement());
-                tiles.push(tile);
-            }
-        }
-
-        for (; i <= CONFIG.maxLevel; i++) {
-            var locations = PROGRESSION[i].locations;
-
-            for (let j = 0; j < locations.length; j++) {
-                var tile = new Tile(locations[j], true);
-                _map.appendChild(tile.getElement());
-                tiles.push(tile);
-            }
+    this.load = () => {
+        for (let i = 0; i < MAP.locations.length; i++) {
+            var location = MAP.locations[i];
+            var tile = new Location(location);
+            _map.appendChild(tile.getElement());
+            tiles.push(tile);
         }
     };
+
+    this.updateVisbility = () => {
+        for (let i = 0; i < tiles.length; i++) {
+            tiles[i].updateVisibility();
+        }
+    }
+
+    this.getLocation = (id) => {
+        var index = binarySearch(tiles, id, (a, b) => a.localeCompare(b.id));
+        return tiles[index];
+    }
 }
 
-function Tile(locationID, hidden) {
-    var index = binarySearch(MAP.locations, locationID, (a, b) => a.localeCompare(b.id));
-    var location = MAP.locations[index];
+function Location(location) {
     var tile = document.createElement("div");
     tile.classList.add("tile");
     tile.style.left = `${location.x}px`;
@@ -53,21 +35,32 @@ function Tile(locationID, hidden) {
     alert.classList.add("hidden");
     alert.textContent = "!";
     tile.appendChild(alert);
+    alert.addEventListener("click", () => {
+        taskManager.startTask(tasks[0]);
+    });
 
     var icon = document.createElement("img");
     icon.src = `./assets/${location.id}.png`;
     icon.width = location.width;
     tile.appendChild(icon);
 
-    if (hidden) {
-        tile.classList.add("locked");
-    }
+    var tasks = [];
 
-    var tasks = []
+    this.id = location.id;
 
     this.getElement = () => {
         return tile;
     }
+
+    this.updateVisibility = () => {
+        if (user.getLevel() < location.minLevel) {
+            tile.classList.add("locked");
+        } else {
+            tile.classList.remove("locked");
+        }
+    }
+
+    this.updateVisibility();
 
     this.addTask = (task) => {
         if (tasks.length == 0) {
@@ -78,15 +71,20 @@ function Tile(locationID, hidden) {
     }
 
     this.removeTask = (task) => {
+        tasks.splice(tasks.indexOf(task), 1);
+
         if (tasks.length == 0) {
             this.hideTaskAlert();
         }
-
-        tasks.splice(tasks.indexOf(task), 1);
     }
 
     this.showTaskAlert = () => {
         alert.classList.remove("hidden");
+        alert.classList.add("jitter")
+
+        setTimeout(() => {
+            alert.classList.remove("jitter");
+        }, 800);
     }
 
     this.hideTaskAlert = () => {
@@ -127,9 +125,7 @@ function User() {
         maxxp = PROGRESSION[level].xp;
 
         hud.updateHUD(user.stats());
-        map.load(level);
-        taskManager.load(data.activeTasks);
-        timeSystem.load(data.time, data.lastTaskCreated, data.lastEventCreated);
+        taskManager.load(data.time, data.activeTasks);
         return data;
     };
 
@@ -146,6 +142,10 @@ function User() {
         const json = await response.json();
         console.log(json);
     };
+
+    this.getLevel = () => {
+        return level;
+    }
 
     this.setLevel = (value) => {
         level = value;
@@ -177,7 +177,9 @@ function User() {
             xp: oldXP,
             maxxp: oldMaxXP
         });
+
         hud.levelUp();
+        map.updateVisbility();
     }
 
     this.stats = () => {
@@ -190,77 +192,166 @@ function User() {
 }
 
 function TaskManager() {
-    var availableTasks = [];
-    var activeTasks = [];
+    _overlay = document.getElementById("overlay");
+    _taskWindow = document.getElementById("taskWindow");
 
-    this.load = (active) => {
+    var day;
+    var time;
+    var lastTaskCreatedTime;
+    var lastTaskCheckTime;
+    var lastEventCreatedTime;
+    var lastEventCheckTime;
+    var clock;
+
+    var availableTasks;
+    var activeTasks;
+    var activeScenario;
+    var taskInProgress = false;
+
+    this.load = (timestamp, active) => {
+        day = timestamp[0];
+        time = timestamp[1];
         availableTasks = RANDOM_TASKS;
         activeTasks = active;
     }
 
     this.addTask = (task) => {
-        activeTasks.push(task);
-
         var index = availableTasks.indexOf(task);
         availableTasks.splice(index, 1);
+        activeTasks.push(task);
+        map.getLocation(task.locationID).addTask(task);
     }
 
     this.removeTask = (task) => {
         var index = activeTasks.indexOf(task);
         activeTasks.splice(index, 1);
 
-        availableTasks.push(task);
+        // only readd random tasks
+        if (task.id) {
+            availableTasks.push(task);
+        }
+
+        map.getLocation(task.locationID).removeTask(task);
     }
 
     this.startTask = (task) => {
+        if (taskInProgress) {
+            return;
+        }
 
+        taskInProgress = true;
+
+        if (task.content.type == "text") {
+            _taskWindow.textContent = task.content.text;
+        }
+
+        _overlay.classList.remove("hidden");
+
+        _taskWindow.addEventListener("click", () => {
+            this.finishTask(task);
+        });
     }
 
     this.finishTask = (task) => {
-        
+        user.increaseXP(task.xp);
+        this.removeTask(task);
+        taskInProgress = false;
+        _overlay.classList.add("hidden");
     }
-}
 
-function TimeSystem() {
-    var day;
-    var time;
-    var lastTaskCreatedDay;
-    var lastTaskCreatedTime;
-    var lastEventCreatedDay;
-    var lastEventCreatedTime;
-    var timer;
+    this.tryGenerateTask = () => {
+        if (availableTasks.length == 0) {
+            return;
+        }
 
-    this.load = (current, lastTask, lastEvent) => {
-        day = current[0];
-        time = current[1];
-        lastTaskCreatedDay = lastTask[0];
-        lastTaskCreatedTime = lastTask[1];
-        lastEventCreatedDay = lastEvent[0];
-        lastEventCreatedTime = lastEvent[1];
+        var index = Math.floor(Math.random() * RANDOM_TASKS.length);
+        var task = RANDOM_TASKS[index];
+
+        if (Math.random() <= task.probability) {
+            this.addTask(task);
+            lastTaskCreatedTime = time;
+        }
+    }
+
+    this.tryGenerateEvent = () => {
+        var index = Math.floor(Math.random() * EVENTS.length);
+        var event = EVENTS[index];
+
+        if (Math.random() <= event.probability) {
+            hud.showMessage(event.message);
+
+            for (let i = 0; i < event.tasks.length; i++) {
+                this.addTask(event.tasks[i]);
+            }
+
+            lastEventCreatedTime = time;
+        }
+    }
+
+    this.startScenario = (scenario) => {
+        activeScenario = scenario;
+    }
+
+    this.endScenario = () => {
+        activeScenario = null;
     }
 
     this.startDay = () => {
-        timer = setInterval(this.tick, 1000);
+        lastTaskCreatedTime = -CONFIG.dayLength;
+        lastTaskCheckTime = -CONFIG.dayLength;
+        lastEventCreatedTime = -CONFIG.dayLength;
+        lastEventCheckTime = -CONFIG.dayLength;
+
+        for (let i = 0; i < SCENARIOS.length; i++) {
+            var scenario = SCENARIOS[i]
+
+            if (day == scenario.startDay) {
+                this.startScenario(scenario);
+            }
+        }
+
+        clock = setInterval(this.tick, 1000);
     }
 
     this.pauseDay = () => {
-        clearInterval(timer);
+        clearInterval(clock);
+    }
+
+    this.finishDay = () => {
+        for (let i = activeTasks.length - 1; i >= 0; i--) {
+            var task = activeTasks[i];
+            
+            if (task.duration[0] == 0) {
+                this.removeTask(task);
+            }
+        }
+
+        if (scenario && day == scenario.endDay) {
+            this.endScenario(activeScenario);
+        }
     }
 
     this.tick = () => {
         time += 1;
-        
+
+        // Day over
         if (time >= CONFIG.dayLength) {
-            this.dayFinished();
+            clearTimeout(clock);
+            this.finishDay();
+            return;
         }
-    }
+        
+        // can generate random task?
+        if (time - lastTaskCreatedTime >= CONFIG.taskGenerateCooldown && time - lastTaskCheckTime >= CONFIG.taskGenerateInterval) {
+            lastTaskCheckTime = time;
+            this.tryGenerateTask();
+        }
 
-    this.dayFinished = () => {
-
-    }
-
-    this.timeDiff = (t1, t2) => {
-        return CONFIG.dayLength * (t1[0] - t2[0]) + t1[1] - t2[1];
+        // can generate event?
+        if (time - lastEventCreatedTime >= CONFIG.eventGenerateCooldown && time - lastEventCheckTime >= CONFIG.eventGenerateInterval) {
+            lastEventCheckTime = time;
+            this.tryGenerateEvent();
+        }
     }
 }
 
@@ -312,11 +403,13 @@ function HUD() {
     }
 }
 
-var game = new Game();
 var map = new Map();
 var user = new User();
 var hud = new HUD();
 var taskManager = new TaskManager();
-var timeSystem = new TimeSystem();
 
-game.load();
+// Load game
+user.readSave("user0").then(() => {
+    map.load();
+    taskManager.startDay();
+});
